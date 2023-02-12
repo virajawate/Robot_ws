@@ -1,0 +1,22 @@
+local_costmap:
+  
+  update_frequency: 10.0
+  publish_frequency: 10.0
+
+  # global_frame: odom
+  # robot_base_frame: base_footprint
+
+  static_map: false  
+  rolling_window: true
+  
+  width: 5
+  height: 5
+  
+  origin_x: -10
+  origin_y: 0
+
+  resolution: 0.1
+
+  plugins:
+    - {name: static_layer,            type: "costmap_2d::StaticLayer"}
+    - {name: obstacle_layer,          type: "costmap_2d::VoxelLayer"}
