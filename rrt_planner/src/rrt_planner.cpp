@@ -4,18 +4,20 @@
 
 PLUGINLIB_EXPORT_CLASS(rrt_planner::RRTPlanner, nav_core::BaseGlobalPlanner)
 
+namespace og = ompl::geometric;
 namespace rrt_planner
 {
 
-    RRTPlanner::RRTPlannner():
-        _costmap_ros(NULL), initialized(false), _allow_unknown(true),
-        _se2_space(new ob::SE2StateSpace()),
-        _velocity_space(new ob::RealVectorStateSpace(1)),
-        _space(_se2_space + _velocity_space),
-        _costmap_model(NULL)    
-    {}
+RRTPlanner::RRTPlanner() : 
+_costmap_ros(NULL),
+_initialized(false), 
+_allow_unknown(true), 
+_se2_space(new ob::SE2StateSpace()), 
+_velocity_space(new ob::RealVectorStateSpace(1)), 
+_space(_se2_space + _velocity_space), _costmap_model(NULL)
+{}
 
-    void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS* costmap_ros)
+void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS* costmap_ros)
     {
         if(!_initialized)
         {
@@ -54,7 +56,7 @@ namespace rrt_planner
         v = (*v_state)[0];
     }
 
-    void RRTPlannner::set_xy_theta_v(ob::State* rs, double x, double y, double theta, double v)
+    void RRTPlanner::set_xy_theta_v(ob::State* rs, double x, double y, double theta, double v)
     {
         ob::CompoundStateSpace::StateType* compound_state = rs->as<ob::CompoundStateSpace::StateType>();
         ob::SE2StateSpace::StateType* se2state = compound_state->as<ob::SE2StateSpace::StateType>(0);
@@ -224,8 +226,8 @@ namespace rrt_planner
 
         // Create space information:
         oc::SpaceInformationPtr si(new oc::SpaceInformation(_space, cspace));
-        si->setStatePropagator(boost::bind(&OmplGlobalPlanner::propagate, this, _1, _2, _3,_4));
-        si->setStateValidityChecker(boost::bind(&OmplGlobalPlanner::isStateValid, this, si.get(), _1));
+        si->setStatePropagator(boost::bind(&RRTPlanner::propagate, this, _1, _2, _3,_4));
+        si->setStateValidityChecker(boost::bind(&RRTPlanner::isStateValid, this, si.get(), _1));
 
         // Define problem:
         ob::ScopedState<> rrt_start(_space);
@@ -250,13 +252,14 @@ namespace rrt_planner
         pdef->setOptimizationObjective(cost_objective + length_objective);
 
         ROS_INFO("Problem defined, running planner");
-        // oc::DecompositionPtr decomp(new My
+
         // ob::PlannerPtr planner(new oc::LBTRRT(si));
         // ob::PlannerPtr planner(new og::RRTConnect(si));
         
         // ob::PlannerPtr planner(new og::PRMstar(si)); // works
         // ob::PlannerPtr planner(new og::PRM(si)); // segfault
         // ob::PlannerPtr planner(new og::TRRT(si));
+
         ob::PlannerPtr planner(new oc::RRT(si));
         planner->setProblemDefinition(pdef);
         planner->setup();
@@ -269,11 +272,11 @@ namespace rrt_planner
             ROS_INFO("RRT done!");
             ob::PathPtr result_path1 = pdef->getSolutionPath();
 
-            // Cast path into geometric path:
-            og::PathGeometric& result_path = static_cast<og::PathGeometric&>(*result_path1);
+            // Cast path into geometric path:<og::PathGeometric>
+            og::PathGeometric& result_path = static_cast<og::PathGeometric&> (*result_path1);
 
             // result_path.interpolate(100);
-            // result_path->print(std::cout);
+            // result_path->print(std::cout);   
 
             // Create path:
             plan.push_back(start);
